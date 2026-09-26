@@ -1,20 +1,79 @@
 package br.ufal.ic.p2.wepayu.models;
 
-import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
 import br.ufal.ic.p2.wepayu.Exception.InvalidTipeException;
+import br.ufal.ic.p2.wepayu.Exception.NoNameException;
 import br.ufal.ic.p2.wepayu.models.Empregados.Empregado;
 import br.ufal.ic.p2.wepayu.models.Empregados.EmpregadoComis;
 import br.ufal.ic.p2.wepayu.models.Empregados.EmpregadoHora;
 
-import java.util.HashMap;
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class BankEmp {
-    private final Map<String, Empregado> empregados = new HashMap<>();
-    private int Newid = 1;
+    private Map<String, Empregado> empregados = new LinkedHashMap<>();
+    private int proximoid = 1;
+
+    public Map<String, Empregado> getEmpregados() {
+        return this.empregados;
+    }
+
+    public void salvarDados() {
+        try (FileOutputStream fos = new FileOutputStream("getpaydata.xml");
+             XMLEncoder encoder = new XMLEncoder(fos)) {
+
+            encoder.writeObject(this.empregados);
+
+        } catch (Exception e) {
+            System.err.println("Erro ao salvar os dados: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void carregarDados() {
+        File arquivo = new File("getpaydata.xml");
+
+        if (!arquivo.exists()) {
+            return;
+        }
+
+        try (FileInputStream fis = new FileInputStream(arquivo);
+             XMLDecoder decoder = new XMLDecoder(fis)) {
+
+            Map<String, Empregado> dadosLidos = (Map<String, Empregado>) decoder.readObject();
+            this.setEmpregados(dadosLidos);
+
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar os dados: " + e.getMessage());
+            this.zerar();
+        }
+    }
+
+    public void setEmpregados(Map<String, Empregado> empregados){
+        this.empregados = new LinkedHashMap<>(empregados);
+
+        int maiorId = 0;
+
+        for (String idString : empregados.keySet()) {
+            try {
+                int numId = Integer.parseInt(idString.replace("Sid", ""));
+                if (numId > maiorId) {
+                    maiorId = numId;
+                }
+            } catch (NumberFormatException e) {
+
+            }
+        }
+
+        this.proximoid = maiorId + 1;
+    }
 
 
-    public String addfunc(String nome, String endereco, String tipo, double salario) throws InvalidTipeException, EmpregadoNaoExisteException {
+    public String addfunc(String nome, String endereco, String tipo, double salario) throws InvalidTipeException {
 
         Empregado novo;
 
@@ -28,23 +87,23 @@ public class BankEmp {
             default:
                 throw new InvalidTipeException("Tipo invalido");
         }
-        String id = "Sid" + Newid;
+        String id = "Sid" + proximoid;
 
         empregados.put(id, novo);
-        Newid++;
+        proximoid++;
 
         return id;
     }
 
-    public String adcfunc(String nome, String endereco, String tipo, double salario, double comissao) throws IllegalArgumentException, EmpregadoNaoExisteException {
+    public String adcfunc(String nome, String endereco, String tipo, double salario, double comissao) throws IllegalArgumentException{
 
         Empregado novo;
 
         novo = new EmpregadoComis(nome, endereco, tipo, salario, comissao);
-        String id = "Sid" + Newid;
+        String id = "Sid" + proximoid;
 
         empregados.put(id, novo);
-        Newid++;
+        proximoid++;
 
         return id;
     }
@@ -52,12 +111,31 @@ public class BankEmp {
 
     public void zerar(){
         empregados.clear();
-        Newid = 1;
+        proximoid = 1;
     }
 
     public Empregado busca(String id){
 
         return empregados.get(id);
+
+    }
+
+    public String getEmpregnome(String nome, String ind) {
+        int indice = Integer.parseInt(ind);
+        int cont = 0;
+
+        for (String id : empregados.keySet()) {
+            Empregado emp = empregados.get(id);
+
+            if (emp.getNome().equals(nome)) {
+                cont++;
+
+                if (cont == indice) {
+                    return id;
+                }
+            }
+        }
+        throw new NoNameException();
     }
 }
 

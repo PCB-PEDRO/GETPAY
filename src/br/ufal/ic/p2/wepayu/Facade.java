@@ -6,12 +6,22 @@ import br.ufal.ic.p2.wepayu.models.Empregados.Empregado;
 import br.ufal.ic.p2.wepayu.models.Empregados.EmpregadoComis;
 
 public class Facade {
+    BankEmp banco;
 
-    private BankEmp banco = new BankEmp();
-
-    public void zerarSistema(){
-        banco.zerar();
+    public Facade() {
+        this.banco = new BankEmp();
+        this.banco.carregarDados();
     }
+
+    public void encerrarSistema() {
+        this.banco.salvarDados();
+    }
+
+    public void zerarSistema() {
+        banco.zerar();
+        this.banco.salvarDados();
+    }
+
 
     public String criarEmpregado(String nome, String endereco, String tipo, String sal) throws EmpregadoNaoExisteException, IllegalArgumentException, NonullException {
         validaString(nome,"Nome nao pode ser nulo.");
@@ -46,6 +56,15 @@ public class Facade {
         return novo;
     }
 
+    public String getEmpregadoPorNome(String nome, String indice) throws NonullException {
+        validaString(nome,"nome do empregado nao pode ser nula.");
+        validaString(indice, "indice nao pode ser nulo");
+
+        String sid = banco.getEmpregnome(nome,indice);
+
+        return sid;
+    }
+
 
     public String getAtributoEmpregado(String emp, String atribute) throws EmpregadoNaoExisteException, NonullException, InvalidTipeException {
 
@@ -67,25 +86,21 @@ public class Facade {
             case "tipo":
                 return consulta.getTipo();
             case "comissao":
-                if (!(consulta instanceof EmpregadoComis)) {
-                    throw new InvalidTipeException("Empregado nao eh comissionado.");
-                }
-                EmpregadoComis consul = (EmpregadoComis) consulta;
+                EmpregadoComis consul = conversaoComissionado(consulta);
                 return String.format("%.2f", consul.getComissao()).replace(".", ",");
             case "sindicalizado":
-                return String.valueOf(consulta.getSindicate());
+                return String.valueOf(consulta.isSindicate());
             default:
                 throw new InvalidTipeException("Atributo nao existe.");
         }
     }
-
-   // public void encerrarSistema(){}
 
     private void validaString(String valor, String mensagemErro) throws NonullException {
         if (valor == null || valor.isBlank()) {
             throw new NonullException(mensagemErro);
         }
     }
+
 
     private void validaTipo(String tipo) throws InvalidTipeException {
         if (tipo == null || tipo.isBlank()) {
@@ -94,6 +109,13 @@ public class Facade {
         if (!tipo.equals("horista") && !tipo.equals("assalariado") && !tipo.equals("comissionado")) {
             throw new InvalidTipeException("Tipo invalido.");
         }
+    }
+
+    private EmpregadoComis conversaoComissionado(Empregado emp) throws InvalidTipeException {
+        if (!emp.getTipo().equals("comissionado")) {
+            throw new InvalidTipeException("Empregado nao eh comissionado.");
+        }
+        return (EmpregadoComis) emp;
     }
 
     private double conversaoDouble(String valor, String erroNum, String erroNegativo) {

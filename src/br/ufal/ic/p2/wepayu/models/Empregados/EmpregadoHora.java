@@ -1,13 +1,16 @@
 package br.ufal.ic.p2.wepayu.models.Empregados;
 
-import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
-
 public class EmpregadoHora extends Empregado {
     int horas;
 
-    public EmpregadoHora(String nome, String endereco, String tipo, double salario) throws EmpregadoNaoExisteException {
+    public EmpregadoHora(String nome, String endereco, String tipo, double salario){
 
         super(nome, endereco, tipo, salario);
     }
+
+    public EmpregadoHora(){ }
+
+    public int getHoras(){return this.horas;}
+    public void setHoras(int horas){this.horas = horas;}
 
 }
