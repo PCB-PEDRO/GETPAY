@@ -56,6 +56,12 @@ public class Facade {
         return novo;
     }
 
+    public void removerEmpregado(String sid) throws EmpregadoNaoExisteException, NonullException {
+        validaString(sid, "Identificacao do empregado nao pode ser nula.");
+
+        banco.removefunc(sid);
+    }
+
     public String getEmpregadoPorNome(String nome, String indice) throws NonullException {
         validaString(nome,"nome do empregado nao pode ser nula.");
         validaString(indice, "indice nao pode ser nulo");
@@ -130,4 +136,6 @@ public class Facade {
         }
         return num;
     }
+
+
 }

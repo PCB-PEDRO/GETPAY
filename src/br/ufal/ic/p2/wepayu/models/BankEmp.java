@@ -1,5 +1,6 @@
 package br.ufal.ic.p2.wepayu.models;
 
+import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
 import br.ufal.ic.p2.wepayu.Exception.InvalidTipeException;
 import br.ufal.ic.p2.wepayu.Exception.NoNameException;
 import br.ufal.ic.p2.wepayu.models.Empregados.Empregado;
@@ -26,14 +27,14 @@ public class BankEmp {
         try (FileOutputStream fos = new FileOutputStream("getpaydata.xml");
              XMLEncoder encoder = new XMLEncoder(fos)) {
 
-            encoder.writeObject(this.empregados);
+            DataSave dados = new DataSave(this.empregados, this.proximoid);
+            encoder.writeObject(dados);
 
         } catch (Exception e) {
             System.err.println("Erro ao salvar os dados: " + e.getMessage());
         }
     }
 
-    @SuppressWarnings("unchecked")
     public void carregarDados() {
         File arquivo = new File("getpaydata.xml");
 
@@ -44,8 +45,10 @@ public class BankEmp {
         try (FileInputStream fis = new FileInputStream(arquivo);
              XMLDecoder decoder = new XMLDecoder(fis)) {
 
-            Map<String, Empregado> dadosLidos = (Map<String, Empregado>) decoder.readObject();
-            this.setEmpregados(dadosLidos);
+            DataSave dadosLidos = (DataSave) decoder.readObject();
+
+            this.empregados = new LinkedHashMap<>(dadosLidos.getEmpregados());
+            this.proximoid = dadosLidos.getProximoid();
 
         } catch (Exception e) {
             System.err.println("Erro ao carregar os dados: " + e.getMessage());
@@ -71,7 +74,6 @@ public class BankEmp {
 
         this.proximoid = maiorId + 1;
     }
-
 
     public String addfunc(String nome, String endereco, String tipo, double salario) throws InvalidTipeException {
 
@@ -106,6 +108,16 @@ public class BankEmp {
         proximoid++;
 
         return id;
+    }
+
+    public void removefunc(String sid) throws EmpregadoNaoExisteException {
+
+        Empregado remove = empregados.remove(sid);
+
+        if(remove == null) {
+            throw new EmpregadoNaoExisteException();
+        }
+
     }
 
 
