@@ -1,4 +1,4 @@
-package br.ufal.ic.p2.wepayu.models;
+package br.ufal.ic.p2.wepayu.models.Empregados;
 
 import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
 
@@ -6,13 +6,15 @@ public class Empregado {
     private String nome;
     private String endereco;
     private String tipo;
-    private int salario;
+    private double salario;
+    private boolean sindicate;
 
-    public Empregado(String nome, String endereco, String tipo, int salario) throws EmpregadoNaoExisteException {
+    public Empregado(String nome, String endereco, String tipo, double salario) throws EmpregadoNaoExisteException {
         this.nome = nome;
         this.endereco = endereco;
         this.tipo = tipo;
         this.salario = salario;
+        sindicate = false;
     }
 
     public String getNome() {
@@ -27,7 +29,9 @@ public class Empregado {
         return tipo;
     }
 
-    public int getSalario() {
+    public boolean getSindicate(){return sindicate;}
+
+    public double getSalario() {
         return salario;
     }
 
