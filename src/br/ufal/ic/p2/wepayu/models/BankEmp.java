@@ -8,11 +8,14 @@ import br.ufal.ic.p2.wepayu.models.Empregados.Empregado;
 import br.ufal.ic.p2.wepayu.models.Empregados.EmpregadoComis;
 import br.ufal.ic.p2.wepayu.models.Empregados.EmpregadoHora;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -86,6 +89,8 @@ public class BankEmp {
                 break;
             case "assalariado":
                 novo = new Empregado(nome, endereco,tipo, salario);
+                LocalDate dataFixa = LocalDate.of(2005, 1, 1);
+                novo.setDataContrato(dataFixa);
                 break;
             default:
                 throw new InvalidTipeException("Tipo invalido");
@@ -104,6 +109,8 @@ public class BankEmp {
 
         novo = new EmpregadoComis(nome, endereco, tipo, salario, comissao);
         String id = "Sid" + proximoid;
+        LocalDate dataFixa = LocalDate.of(2005, 1, 1);
+        novo.setDataContrato(dataFixa);
 
         empregados.put(id, novo);
         proximoid++;
