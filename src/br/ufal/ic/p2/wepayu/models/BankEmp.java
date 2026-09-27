@@ -2,6 +2,7 @@ package br.ufal.ic.p2.wepayu.models;
 
 import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
 import br.ufal.ic.p2.wepayu.Exception.InvalidTipeException;
+import br.ufal.ic.p2.wepayu.Exception.NaoExisteException;
 import br.ufal.ic.p2.wepayu.Exception.NoNameException;
 import br.ufal.ic.p2.wepayu.models.Empregados.Empregado;
 import br.ufal.ic.p2.wepayu.models.Empregados.EmpregadoComis;
@@ -133,6 +134,19 @@ public class BankEmp {
 
     }
 
+    public Empregado getEmpreSind(String sinid){
+
+        for (Empregado emp : empregados.values()) {
+            if (emp.getSindicato() != null) {
+
+                if (emp.getSindicato().getIdSindical().equals(sinid)) {
+                    return emp;
+                }
+            }
+        }
+        return null;
+    }
+
     public String getEmpregnome(String nome, String ind) {
         int indice = Integer.parseInt(ind);
         int cont = 0;
@@ -149,6 +163,10 @@ public class BankEmp {
             }
         }
         throw new NoNameException();
+    }
+
+    public void atualizarEmpregado(String empId, Empregado novoEmp) {
+        this.empregados.put(empId, novoEmp);
     }
 }
 
