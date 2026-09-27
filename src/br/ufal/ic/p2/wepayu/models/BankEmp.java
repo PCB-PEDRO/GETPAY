@@ -124,9 +124,10 @@ public class BankEmp {
     public void zerar(){
         empregados.clear();
         proximoid = 1;
+        salvarDados();
     }
 
-    public Empregado busca(String id){
+    public Empregado getEmpregado(String id){
 
         return empregados.get(id);
 

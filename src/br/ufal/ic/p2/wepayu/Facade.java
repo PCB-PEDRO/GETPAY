@@ -4,6 +4,12 @@ import br.ufal.ic.p2.wepayu.Exception.*;
 import br.ufal.ic.p2.wepayu.models.BankEmp;
 import br.ufal.ic.p2.wepayu.models.Empregados.Empregado;
 import br.ufal.ic.p2.wepayu.models.Empregados.EmpregadoComis;
+import br.ufal.ic.p2.wepayu.models.Empregados.EmpregadoHora;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 
 public class Facade {
     BankEmp banco;
@@ -33,9 +39,8 @@ public class Facade {
 
         double salario = conversaoDouble(sal, "Salario deve ser numerico.", "Salario deve ser nao-negativo." );
 
-        String novo = banco.addfunc(nome, endereco, tipo, salario);
+        return banco.addfunc(nome, endereco, tipo, salario);
 
-        return novo;
 
     }
 
@@ -52,14 +57,76 @@ public class Facade {
 
         double comissao = conversaoDouble(comi, "Comissao deve ser numerica.", "Comissao deve ser nao-negativa." );
 
-        String novo = banco.adcfunc(nome, endereco, tipo, salario, comissao);
-        return novo;
+        return banco.adcfunc(nome, endereco, tipo, salario, comissao);
     }
 
     public void removerEmpregado(String sid) throws EmpregadoNaoExisteException, NonullException {
         validaString(sid, "Identificacao do empregado nao pode ser nula.");
 
         banco.removefunc(sid);
+    }
+
+    public void lancaCartao(String sid, String sdata, String shoras) throws EmpregadoNaoExisteException, InvalidTipeException, NonullException {
+
+        validaString(sid, "Identificacao do empregado nao pode ser nula.");
+
+        Empregado aux = banco.getEmpregado(sid);
+
+        if(aux == null){
+            throw new EmpregadoNaoExisteException();
+        }
+
+        EmpregadoHora func = conversaoHorista(aux);
+
+        LocalDate data = conversaoData(sdata, "Data invalida.");
+
+        double horas = conversaoDouble(shoras,"Horas devem ser um numero.", "Horas devem ser positivas." );
+        func.addCard(sdata, horas);
+
+    }
+
+    public String getHorasNormaisTrabalhadas(String sid, String datai, String dataf) throws EmpregadoNaoExisteException, InvalidTipeException, NonullException {
+        validaString(sid, "Identificacao do empregado nao pode ser nula.");
+        Empregado aux = banco.getEmpregado(sid);
+
+        if(aux == null){
+            throw new EmpregadoNaoExisteException();
+        }
+
+        EmpregadoHora func = conversaoHorista(aux);
+
+        LocalDate datain = conversaoData(datai, "Data inicial invalida.");
+        LocalDate datafn = conversaoData(dataf, "Data final invalida.");
+
+        if(datain.isAfter(datafn)){
+            throw new InvalidDataException("Data inicial nao pode ser posterior aa data final.");
+        }
+        double horas = func.getHoras(datain, datafn);
+
+        return formatarSaida(horas);
+    }
+
+    public String getHorasExtrasTrabalhadas(String sid, String datai, String dataf) throws EmpregadoNaoExisteException, InvalidTipeException, NonullException {
+        validaString(sid, "Identificacao do empregado nao pode ser nula.");
+        Empregado aux = banco.getEmpregado(sid);
+
+        if(aux == null){
+            throw new EmpregadoNaoExisteException();
+        }
+
+        EmpregadoHora func = conversaoHorista(aux);
+
+        LocalDate datain = conversaoData(datai, "Data inicial invalida.");
+        LocalDate datafn = conversaoData(dataf, "Data final invalida.");
+
+        if(datain.isAfter(datafn)){
+            throw new InvalidDataException("Data inicial nao pode ser posterior aa data final.");
+        }
+        double horas = func.getHorasEx(datain, datafn);
+
+        return formatarSaida(horas);
+
+
     }
 
     public String getEmpregadoPorNome(String nome, String indice) throws NonullException {
@@ -76,7 +143,7 @@ public class Facade {
 
         validaString(emp, "Identificacao do empregado nao pode ser nula.");
 
-        Empregado consulta = banco.busca(emp);
+        Empregado consulta = banco.getEmpregado(emp);
 
         if (consulta == null) {
             throw new EmpregadoNaoExisteException();
@@ -107,7 +174,6 @@ public class Facade {
         }
     }
 
-
     private void validaTipo(String tipo) throws InvalidTipeException {
         if (tipo == null || tipo.isBlank()) {
             throw new InvalidTipeException("Tipo invalido.");
@@ -116,6 +182,29 @@ public class Facade {
             throw new InvalidTipeException("Tipo invalido.");
         }
     }
+
+    private LocalDate conversaoData(String dataStr, String mensagemErro) throws InvalidDataException {
+
+        if (dataStr == null || dataStr.isBlank()) {
+            throw new InvalidDataException(mensagemErro);
+        }
+        try {
+            DateTimeFormatter formatador = DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(ResolverStyle.STRICT);
+            return LocalDate.parse(dataStr, formatador);
+        } catch (DateTimeParseException e) {
+            throw new InvalidDataException(mensagemErro);
+        }
+    }
+
+
+    private EmpregadoHora conversaoHorista(Empregado emp) throws InvalidTipeException {
+        if (!emp.getTipo().equals("horista")) {
+            throw new InvalidTipeException("Empregado nao eh horista.");
+        }
+        return (EmpregadoHora) emp;
+    }
+
+
 
     private EmpregadoComis conversaoComissionado(Empregado emp) throws InvalidTipeException {
         if (!emp.getTipo().equals("comissionado")) {
@@ -135,6 +224,14 @@ public class Facade {
             throw new NegativeNumException(erroNegativo);
         }
         return num;
+    }
+
+    private String formatarSaida(double valor) {
+        if (valor % 1 == 0) {
+            return String.format("%.0f", valor);
+        } else {
+            return String.valueOf(valor).replace(".", ",");
+        }
     }
 
 

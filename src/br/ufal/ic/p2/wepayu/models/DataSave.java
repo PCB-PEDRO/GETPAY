@@ -9,12 +9,13 @@ public class DataSave {
     private Map<String, Empregado> empregados = new LinkedHashMap<>();
     private int proximoid;
 
-    public DataSave() {}
-
     public DataSave(Map<String, Empregado> empregados, int proximoid) {
         this.empregados = new LinkedHashMap<>(empregados);
         this.proximoid = proximoid;
     }
+
+    public DataSave() {}
+
     public Map<String, Empregado> getEmpregados() { return empregados; }
     public void setEmpregados(Map<String, Empregado> empregados) { this.empregados = empregados; }
 
