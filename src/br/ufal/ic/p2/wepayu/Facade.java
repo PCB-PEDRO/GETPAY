@@ -28,7 +28,6 @@ public class Facade {
         this.banco.salvarDados();
     }
 
-
     public String criarEmpregado(String nome, String endereco, String tipo, String sal) throws EmpregadoNaoExisteException, IllegalArgumentException, NonullException {
         validaString(nome,"Nome nao pode ser nulo.");
         validaString(endereco, "Endereco nao pode ser nulo.");
@@ -71,7 +70,6 @@ public class Facade {
         validaString(sid, "Identificacao do empregado nao pode ser nula.");
 
         Empregado aux = banco.getEmpregado(sid);
-
         if(aux == null){
             throw new EmpregadoNaoExisteException();
         }
@@ -83,6 +81,42 @@ public class Facade {
         double horas = conversaoDouble(shoras,"Horas devem ser um numero.", "Horas devem ser positivas." );
         func.addCard(sdata, horas);
 
+    }
+
+    public void lancaVenda(String sid, String sdata, String svalor) throws NonullException, EmpregadoNaoExisteException, InvalidTipeException {
+
+        validaString(sid, "Identificacao do empregado nao pode ser nula.");
+
+        Empregado aux = banco.getEmpregado(sid);
+        if(aux == null){
+            throw new EmpregadoNaoExisteException();
+        }
+        EmpregadoComis func = conversaoComissionado(aux);
+
+        LocalDate data = conversaoData(sdata, "Data invalida.");
+
+        double valor = conversaoDouble(svalor,"Valor deve ser um numero.", "Valor deve ser positivo." );
+
+        func.addVenda(sdata, valor);
+    }
+
+    public String getVendasRealizadas(String sid, String datai, String dataf) throws NonullException, EmpregadoNaoExisteException, InvalidTipeException {
+        validaString(sid, "Identificacao do empregado nao pode ser nula.");
+        Empregado aux = banco.getEmpregado(sid);
+
+        if(aux == null){
+            throw new EmpregadoNaoExisteException();
+        }
+
+        EmpregadoComis func = conversaoComissionado(aux);
+
+        LocalDate datain = conversaoData(datai, "Data inicial invalida.");
+        LocalDate datafn = conversaoData(dataf, "Data final invalida.");
+
+        if(datain.isAfter(datafn)){
+            throw new InvalidDataException("Data inicial nao pode ser posterior aa data final.");
+        }
+        return String.format("%.2f", func.getVendas(datain, datafn)).replace(".", ",");
     }
 
     public String getHorasNormaisTrabalhadas(String sid, String datai, String dataf) throws EmpregadoNaoExisteException, InvalidTipeException, NonullException {
@@ -137,7 +171,6 @@ public class Facade {
 
         return sid;
     }
-
 
     public String getAtributoEmpregado(String emp, String atribute) throws EmpregadoNaoExisteException, NonullException, InvalidTipeException {
 
@@ -196,15 +229,12 @@ public class Facade {
         }
     }
 
-
     private EmpregadoHora conversaoHorista(Empregado emp) throws InvalidTipeException {
         if (!emp.getTipo().equals("horista")) {
             throw new InvalidTipeException("Empregado nao eh horista.");
         }
         return (EmpregadoHora) emp;
     }
-
-
 
     private EmpregadoComis conversaoComissionado(Empregado emp) throws InvalidTipeException {
         if (!emp.getTipo().equals("comissionado")) {
@@ -233,6 +263,4 @@ public class Facade {
             return String.valueOf(valor).replace(".", ",");
         }
     }
-
-
 }

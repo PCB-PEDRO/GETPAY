@@ -1,4 +1,4 @@
-package br.ufal.ic.p2.wepayu.models.Empregados;
+package br.ufal.ic.p2.wepayu.models.Empregados.Cards;
 
 public class CardPoint {
 

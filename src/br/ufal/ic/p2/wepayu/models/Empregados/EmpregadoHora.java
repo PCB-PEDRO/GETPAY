@@ -1,5 +1,7 @@
 package br.ufal.ic.p2.wepayu.models.Empregados;
 
+import br.ufal.ic.p2.wepayu.models.Empregados.Cards.CardPoint;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
