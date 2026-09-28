@@ -22,7 +22,7 @@
 # receberia (isso nao esta testado, mas se preparem, porque podemos colocar nos testes extra)
 # 
 # Obs. 2: as taxas extra sao pontuais e cobradas sempre no proximo pagamento, valendo a mesma regra anterior de que nao
-# pode haver contracheque negativo
+# pode haver contracheque negativo=====
 
 # ESCLARECIMENTO SOBRE DATAS DE CONTRATO DE EMPREGADOS
 # Como falta um comando para especificar a data de contrato de um empregado (poderia ser tambem atributo de criarEmpregado),

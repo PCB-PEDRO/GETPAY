@@ -1,27 +1,23 @@
 package br.ufal.ic.p2.wepayu.models;
 
-import br.ufal.ic.p2.wepayu.Exception.EmpregadoNaoExisteException;
-import br.ufal.ic.p2.wepayu.Exception.InvalidTipeException;
-import br.ufal.ic.p2.wepayu.Exception.NaoExisteException;
-import br.ufal.ic.p2.wepayu.Exception.NoNameException;
+import br.ufal.ic.p2.wepayu.Exception.*;
 import br.ufal.ic.p2.wepayu.models.Empregados.Empregado;
 import br.ufal.ic.p2.wepayu.models.Empregados.EmpregadoComis;
 import br.ufal.ic.p2.wepayu.models.Empregados.EmpregadoHora;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Stack;
 
 public class BankEmp {
     private Map<String, Empregado> empregados = new LinkedHashMap<>();
     private int proximoid = 1;
+    private Stack<String> undoStack = new Stack<>();
+    private Stack<String> redoStack = new Stack<>();
 
     public Map<String, Empregado> getEmpregados() {
         return this.empregados;
@@ -46,8 +42,7 @@ public class BankEmp {
             return;
         }
 
-        try (FileInputStream fis = new FileInputStream(arquivo);
-             XMLDecoder decoder = new XMLDecoder(fis)) {
+        try (FileInputStream fis = new FileInputStream(arquivo); XMLDecoder decoder = new XMLDecoder(fis)) {
 
             DataSave dadosLidos = (DataSave) decoder.readObject();
 
@@ -141,6 +136,10 @@ public class BankEmp {
 
     }
 
+    public int getTotalEmp(){
+        return empregados.size();
+    }
+
     public Empregado getEmpreSind(String sinid){
 
         for (Empregado emp : empregados.values()) {
@@ -174,6 +173,54 @@ public class BankEmp {
 
     public void atualizarEmpregado(String empId, Empregado novoEmp) {
         this.empregados.put(empId, novoEmp);
+    }
+
+    public String gerarSnapshot() {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            XMLEncoder encoder = new XMLEncoder(bos);
+            DataSave dados = new DataSave(this.empregados, this.proximoid);
+            encoder.writeObject(dados);
+            encoder.close();
+            return bos.toString("UTF-8");
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public void registrarComando(String snapshotAntigo) {
+        undoStack.push(snapshotAntigo);
+        redoStack.clear();
+    }
+
+    public void undo() throws NoUndoException {
+        if (undoStack.isEmpty()) {
+            throw new NoUndoException();
+        }
+        redoStack.push(gerarSnapshot());
+        restaurarDeSnapshot(undoStack.pop());
+    }
+
+    public void redo() throws NoRedoException {
+        if (redoStack.isEmpty()) {
+            throw new NoRedoException();
+        }
+        undoStack.push(gerarSnapshot());
+        restaurarDeSnapshot(redoStack.pop());
+    }
+
+    private void restaurarDeSnapshot(String snapshot) {
+        try {
+            ByteArrayInputStream bis = new ByteArrayInputStream(snapshot.getBytes("UTF-8"));
+            XMLDecoder decoder = new XMLDecoder(bis);
+            DataSave dadosLidos = (DataSave) decoder.readObject();
+            decoder.close();
+
+            this.empregados = new LinkedHashMap<>(dadosLidos.getEmpregados());
+            this.proximoid = dadosLidos.getProximoid();
+        } catch (Exception e) {
+            System.err.println("Erro ao restaurar sistema.");
+        }
     }
 }
 

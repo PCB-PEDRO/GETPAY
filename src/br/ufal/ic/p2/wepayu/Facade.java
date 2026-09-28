@@ -17,6 +17,8 @@ import java.time.format.ResolverStyle;
 
 public class Facade {
     BankEmp banco;
+    private boolean sistemaEncerrado = false;
+    private String ultimaFolha = "";
 
     public Facade() {
         this.banco = new BankEmp();
@@ -24,12 +26,16 @@ public class Facade {
     }
 
     public void zerarSistema() {
+        String backup = banco.gerarSnapshot();
         banco.zerar();
         this.banco.salvarDados();
+        banco.registrarComando(backup);
+        this.ultimaFolha = "";
     }
 
     public void alteraEmpregado(String emp, String atribute, String valor) throws EmpregadoNaoExisteException, NonullException, InvalidTipeException {
 
+        String backup = banco.gerarSnapshot();
         validaString(emp, "Identificacao do empregado nao pode ser nula.");
 
         Empregado consulta = banco.getEmpregado(emp);
@@ -58,9 +64,13 @@ public class Facade {
                 if (valor.equals("assalariado")) {
 
                     Empregado novoEmp = new Empregado(consulta.getNome(), consulta.getEndereco(), "assalariado", consulta.getSalario());
-
                     novoEmp.setSindicato(consulta.getSindicato());
                     novoEmp.setMetodoPagamento(consulta.getMetodoPagamento());
+
+                    novoEmp.setSindicalizado(consulta.isSindicalizado());
+                    novoEmp.setDataContrato(consulta.getDataContrato());
+                    novoEmp.setUltimoPagamento(consulta.getUltimoPagamento());
+                    novoEmp.setDividaSindicato(consulta.getDividaSindicato());
 
                     banco.atualizarEmpregado(emp, novoEmp);
                 }
@@ -111,9 +121,12 @@ public class Facade {
             default:
                 throw new InvalidTipeException("Atributo nao existe.");
         }
+        banco.registrarComando(backup);
     }
 
     public void alteraEmpregado(String emp, String atribute, String valor, String alternancia) throws Exception {
+
+        String backup = banco.gerarSnapshot();
 
         validaString(emp, "Identificacao do empregado nao pode ser nula.");
 
@@ -136,6 +149,11 @@ public class Facade {
             novoEmp.setSindicato(consulta.getSindicato());
             novoEmp.setMetodoPagamento(consulta.getMetodoPagamento());
 
+            novoEmp.setSindicalizado(consulta.isSindicalizado());
+            novoEmp.setDataContrato(consulta.getDataContrato());
+            novoEmp.setUltimoPagamento(consulta.getUltimoPagamento());
+            novoEmp.setDividaSindicato(consulta.getDividaSindicato());
+
             banco.atualizarEmpregado(emp, novoEmp);
 
         }
@@ -148,15 +166,22 @@ public class Facade {
             novoEmp.setSindicato(consulta.getSindicato());
             novoEmp.setMetodoPagamento(consulta.getMetodoPagamento());
 
+            novoEmp.setSindicalizado(consulta.isSindicalizado());
+            novoEmp.setDataContrato(consulta.getDataContrato());
+            novoEmp.setUltimoPagamento(consulta.getUltimoPagamento());
+            novoEmp.setDividaSindicato(consulta.getDividaSindicato());
+
             banco.atualizarEmpregado(emp, novoEmp);
 
         } else {
             throw new InvalidTipeException("Tipo invalido.");
         }
+        banco.registrarComando(backup);
     }
 
     public void alteraEmpregado(String emp, String atribute, String valor, String idSindicato, String taxaSindical) throws EmpregadoNaoExisteException, NonullException, InvalidTipeException, JaEsxisteException {
 
+        String backup = banco.gerarSnapshot();
         validaString(emp, "Identificacao do empregado nao pode ser nula.");
 
         Empregado consulta = banco.getEmpregado(emp);
@@ -190,9 +215,12 @@ public class Facade {
         } else{
             consulta.setSindicato(null);
         }
+
+        banco.registrarComando(backup);
     }
 
     public void alteraEmpregado(String emp, String atribute, String valor, String bank, String agencia, String conta) throws NonullException, EmpregadoNaoExisteException, InvalidTipeException {
+        String backup = banco.gerarSnapshot();
         validaString(emp, "Identificacao do empregado nao pode ser nula.");
 
         Empregado consulta = banco.getEmpregado(emp);
@@ -216,10 +244,12 @@ public class Facade {
 
         Banco novo = new Banco(valor, bank, agencia, conta);
         consulta.setMetodoPagamento(novo);
+        banco.registrarComando(backup);
 
     }
 
     public String criarEmpregado(String nome, String endereco, String tipo, String sal) throws EmpregadoNaoExisteException, IllegalArgumentException, NonullException {
+        String backup = banco.gerarSnapshot();
         validaString(nome,"Nome nao pode ser nulo.");
         validaString(endereco, "Endereco nao pode ser nulo.");
         validaString(sal, "Salario nao pode ser nulo.");
@@ -229,12 +259,14 @@ public class Facade {
 
         double salario = conversaoDouble(sal, "Salario deve ser numerico.", "Salario deve ser nao-negativo." );
 
-        return banco.addfunc(nome, endereco, tipo, salario);
-
-
+        String id = banco.addfunc(nome, endereco, tipo, salario);
+        banco.registrarComando(backup);
+        return id;
     }
 
     public String criarEmpregado(String nome, String endereco, String tipo, String sal, String comi) throws EmpregadoNaoExisteException, InvalidTipeException, NonullException {
+        String backup = banco.gerarSnapshot();
+
         validaString(nome,"Nome nao pode ser nulo.");
         validaString(endereco, "Endereco nao pode ser nulo.");
         validaString(sal, "Salario nao pode ser nulo.");
@@ -247,10 +279,13 @@ public class Facade {
 
         double comissao = conversaoDouble(comi, "Comissao deve ser numerica.", "Comissao deve ser nao-negativa." );
 
-        return banco.adcfunc(nome, endereco, tipo, salario, comissao);
+        String id = banco.adcfunc(nome, endereco, tipo, salario, comissao);
+        banco.registrarComando(backup);
+        return id;
     }
 
     public void encerrarSistema() {
+        this.sistemaEncerrado = true;
         this.banco.salvarDados();
     }
 
@@ -338,6 +373,10 @@ public class Facade {
         String sid = banco.getEmpregnome(nome,indice);
 
         return sid;
+    }
+
+    public String getNumeroDeEmpregados(){
+        return formatarSaida(banco.getTotalEmp());
     }
 
     public String getHorasExtrasTrabalhadas(String sid, String datai, String dataf) throws EmpregadoNaoExisteException, InvalidTipeException, NonullException {
@@ -428,6 +467,8 @@ public class Facade {
 
     public void lancaCartao(String sid, String sdata, String shoras) throws EmpregadoNaoExisteException, InvalidTipeException, NonullException {
 
+        String backup = banco.gerarSnapshot();
+
         validaString(sid, "Identificacao do empregado nao pode ser nula.");
 
         Empregado aux = banco.getEmpregado(sid);
@@ -445,9 +486,11 @@ public class Facade {
 
         double horas = conversaoDouble(shoras,"Horas devem ser um numero.", "Horas devem ser positivas." );
         func.addCard(sdata, horas);
+        banco.registrarComando(backup);
     }
 
     public void lancaTaxaServico(String sinid, String sdata, String svalor) throws NonullException, NaoExisteException{
+        String backup = banco.gerarSnapshot();
         validaString(sinid, "Identificacao do membro nao pode ser nula.");
 
         Empregado aux = banco.getEmpreSind(sinid);
@@ -460,9 +503,11 @@ public class Facade {
         double valor = conversaoDouble(svalor,"Valor deve ser um numero.", "Valor deve ser positivo." );
 
         men.addTaxas(sdata, valor);
+        banco.registrarComando(backup);
     }
 
     public void lancaVenda(String sid, String sdata, String svalor) throws NonullException, EmpregadoNaoExisteException, InvalidTipeException {
+        String backup = banco.gerarSnapshot();
 
         validaString(sid, "Identificacao do empregado nao pode ser nula.");
 
@@ -477,22 +522,38 @@ public class Facade {
         double valor = conversaoDouble(svalor,"Valor deve ser um numero.", "Valor deve ser positivo." );
 
         func.addVenda(sdata, valor);
+        banco.registrarComando(backup);
     }
 
     public void removerEmpregado(String sid) throws EmpregadoNaoExisteException, NonullException {
+        String backup = banco.gerarSnapshot();
         validaString(sid, "Identificacao do empregado nao pode ser nula.");
 
         banco.removefunc(sid);
+        banco.registrarComando(backup);
     }
 
-    public void redo(){}
+    public void redo() throws Exception {
+        if (sistemaEncerrado) {
+            throw new Exception("Nao pode dar comandos depois de encerrarSistema.");
+        }
+        banco.redo();
+    }
 
     public void rodaFolha (String sdata, String saida) throws Exception {
-        LocalDate data = conversaoData(sdata, "Data invalida");
-        validaString(saida, "Saida invalida");
 
-        PayRoll folha = new PayRoll(data, saida);
+        if (sdata.equals(this.ultimaFolha)) {
+            undo();
+        }
+        String backup = banco.gerarSnapshot();
+        validaString(saida, "Saida invalida");
+        LocalDate dataConvertida = conversaoData(sdata, "Data invalida");
+        PayRoll folha = new PayRoll(dataConvertida, saida);
         folha.pagar(banco);
+
+        this.ultimaFolha = sdata;
+
+        banco.registrarComando(backup);
     }
 
     public String totalFolha(String data){
@@ -504,7 +565,12 @@ public class Facade {
         return String.format("%.2f", total).replace(".", ",");
     }
 
-    public void undo(){ }
+    public void undo() throws Exception {
+        if (sistemaEncerrado) {
+            throw new Exception("Nao pode dar comandos depois de encerrarSistema.");
+        }
+        banco.undo();
+    }
 
     private void validaString(String valor, String mensagemErro) throws NonullException {
         if (valor == null || valor.isBlank()) {

@@ -1,11 +1,8 @@
 package br.ufal.ic.p2.wepayu.models.Empregados;
 
-
-import br.ufal.ic.p2.wepayu.models.Empregados.pagamento.Banco;
 import br.ufal.ic.p2.wepayu.models.Empregados.pagamento.Payment;
 import br.ufal.ic.p2.wepayu.models.Sindicato.Sindicate;
 
-import java.beans.Transient;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -21,8 +18,6 @@ public class Empregado {
     private String stringUltimoPagamento;
     private double dividaSindicato = 0.0;
 
-    private transient DateTimeFormatter formatador = DateTimeFormatter.ofPattern("d/M/yyyy");
-
     public Empregado(String nome, String endereco, String tipo, double salario){
         this.nome = nome;
         this.endereco = endereco;
@@ -32,70 +27,82 @@ public class Empregado {
 
     public Empregado(){ }
 
-    public String getNome() {
-        return nome;
+    public String getNome() { return nome; }
+    public void setNome(String nome){ this.nome = nome; }
+
+    public String getEndereco() { return endereco; }
+    public void setEndereco(String endereco){ this.endereco = endereco; }
+
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo){ this.tipo = tipo; }
+
+    public boolean isSindicalizado(){ return sindicalizado; }
+    public void setSindicalizado(boolean sindicalizado){ this.sindicalizado = sindicalizado; }
+
+    public double getSalario() { return salario; }
+    public void setSalario(double salario) { this.salario = salario; }
+
+    public Sindicate getSindicato() { return sindicato; }
+    public void setSindicato(Sindicate sindicato) { this.sindicato = sindicato; }
+
+    public Payment getMetodoPagamento() { return metodoPagamento; }
+    public void setMetodoPagamento(Payment metodoPagamento) { this.metodoPagamento = metodoPagamento; }
+
+    public double getDividaSindicato() { return dividaSindicato; }
+    public void setDividaSindicato(double dividaSindicato) { this.dividaSindicato = dividaSindicato; }
+
+
+    public String getStringDataContrato() {
+        return stringDataContrato;
     }
-    public void setNome(String nome){this.nome = nome;}
 
-    public String getEndereco() {
-        return endereco;
+    public void setStringDataContrato(String stringDataContrato) {
+        this.stringDataContrato = stringDataContrato;
     }
-    public void setEndereco(String endereco){this.endereco = endereco;}
 
-    public String getTipo() {
-        return tipo;
+    public String getStringUltimoPagamento() {
+        return stringUltimoPagamento;
     }
-    public void setTipo(String tipo){this.tipo = tipo;}
 
-    public boolean isSindicalizado(){return sindicalizado;}
-    public void setSindicalizado(boolean sindicate){this.sindicalizado = sindicate;}
-
-    public double getSalario() {
-        return salario;
+    public void setStringUltimoPagamento(String stringUltimoPagamento) {
+        this.stringUltimoPagamento = stringUltimoPagamento;
     }
-    public void setSalario(double salario) {this.salario = salario;}
 
-    public Sindicate getSindicato() {return sindicato;}
-    public void setSindicato(Sindicate sindicato) {this.sindicato = sindicato;}
-
-    public Payment getMetodoPagamento() {return metodoPagamento;}
-    public void setMetodoPagamento(Payment metodoPagamento) {this.metodoPagamento = metodoPagamento;}
-
-    @Transient
+    @java.beans.Transient
     public LocalDate getDataContrato() {
         if (stringDataContrato == null || stringDataContrato.isEmpty()) {
             return null;
         }
-        return LocalDate.parse(stringDataContrato, formatador);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("d/M/yyyy");
+        return LocalDate.parse(stringDataContrato, fmt);
     }
 
-    @Transient
+    @java.beans.Transient
     public void setDataContrato(LocalDate data) {
         if (data != null) {
-            this.stringDataContrato = data.format(formatador);
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("d/M/yyyy");
+            this.stringDataContrato = data.format(fmt);
         } else {
             this.stringDataContrato = null;
         }
     }
 
-    @Transient
+    @java.beans.Transient
     public LocalDate getUltimoPagamento() {
         if (stringUltimoPagamento == null || stringUltimoPagamento.isEmpty()) {
             return null;
         }
-        return LocalDate.parse(stringUltimoPagamento, formatador);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("d/M/yyyy");
+        return LocalDate.parse(stringUltimoPagamento, fmt);
     }
 
-    @Transient
+    @java.beans.Transient
     public void setUltimoPagamento(LocalDate data) {
         if (data != null) {
-            this.stringUltimoPagamento = data.format(formatador);
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("d/M/yyyy");
+            this.stringUltimoPagamento = data.format(fmt);
         } else {
             this.stringUltimoPagamento = null;
         }
     }
-
-    public double getDividaSindicato() {return dividaSindicato;}
-    public void setDividaSindicato(double dividaSindicato) {this.dividaSindicato = dividaSindicato;}
-
 }
